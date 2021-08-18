@@ -8,12 +8,11 @@ body {
 h1 {
   font-size: 10rem;
   margin: 1rem;
+  margin-top: 20%;
 }
 
 #game {
-
   margin: 5rem 0rem;
-
 }
 
 #game div {
@@ -30,9 +29,9 @@ h1 {
 }
 
 button {
-  height: 3rem;
-  width: 20rem; 
-  font-size: 1.5rem; 
+  height: 7rem;
+  width: 30rem; 
+  font-size: 4rem; 
   border-radius: 15px; 
   background: white;
   color: black;
@@ -57,9 +56,15 @@ button:hover {
 
 #finished {
   font-size: 1.5rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-#new-game-btn {
-  font-size: 1.5rem; 
-  margin: 2rem;
+#new-game-btn button{
+  margin: 1rem;
+  font-size: 3rem;
+  margin-left: auto;
+  margin-right: auto;
+  height: 5rem;
+  width: 20rem; 
 }

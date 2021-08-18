@@ -127,6 +127,7 @@ startBtn.addEventListener('click', function(e) {
    // resize h1
    const h1 = document.querySelector('h1');
    h1.style.fontSize = '5rem';
+   h1.style.margin = '1rem';
 
   displayTopScore();
   scores.classList.toggle('hidden'); // display scores
