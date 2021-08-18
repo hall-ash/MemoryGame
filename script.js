@@ -6,6 +6,9 @@ Cohort Aug 2021
 
 const gameContainer = document.getElementById("game");
 const startBtn = document.querySelector('button');
+const FRONT_SIDE = 0;
+const CARD_TYPE = 'gradient';
+let CARD_FRONTS = []; // images/colors on the front side of each card, 2 identical fronts for each pair
 let score = 0; 
 let firstGuessedCard = '';
 let needToWait = false;
@@ -28,11 +31,19 @@ const getRandHexColor = () => {
   return hexColor;
 }
 
-
+// returns a hex color array 
+// of length numberOfPairs * 2 
+// to use as the background for each card
 const getColorArray = (numberOfPairs) => {
   let colorArray = [];
   for (let i = 0; i < numberOfPairs; ++i) {
-    const color = getRandHexColor();
+    
+    // do not set color to black
+    let color = getRandHexColor();
+    while(color === '#000000') {
+      color = getRandHexColor();
+    }
+
     // push twice for a matching pair
     colorArray.push(color);
     colorArray.push(color);
@@ -40,7 +51,36 @@ const getColorArray = (numberOfPairs) => {
   return colorArray;
 } 
 
-let COLORS = getColorArray(numMatchingCardPairs);
+// returns a gradient array of length numberOfPairs * 2
+// to use as the background for each card
+const getGradientArray = (numberOfPairs) => {
+  let gradientArray = [];
+  
+  for (let i = 0; i < numberOfPairs; ++i) {
+    let gradient = {};
+    gradient['startColor'] = getRandHexColor();
+    gradient['endColor'] = getRandHexColor();
+    gradient['id'] = i.toString();
+
+    // push twice for a matching pair
+    gradientArray.push(gradient);
+    gradientArray.push(gradient);
+  }
+  return gradientArray;
+}
+
+// create colors/gradients for the front side of each card in array CARD_FRONTS
+const setCardFronts = (type) => {
+  if (type === 'gradient') {
+    CARD_FRONTS = getGradientArray(numMatchingCardPairs);
+  }
+  else if (type === 'color') {
+    CARD_FRONTS = getColorArray(numMatchingCardPairs);
+  }
+  else {
+    console.log('setCardFronts: no card type selected')
+  }
+}
 
 
 // const COLORS = [
@@ -56,7 +96,8 @@ let COLORS = getColorArray(numMatchingCardPairs);
 //   "purple"
 // ];
 
-const totalPossibleMatches = COLORS.length / 2; 
+setCardFronts(CARD_TYPE);
+const totalPossibleMatches = CARD_FRONTS.length / 2; 
 let totalCurrentMatches = 0; 
 
 const initNewGame = () => {
@@ -65,7 +106,7 @@ const initNewGame = () => {
   firstGuessedCard = '';
   needToWait = false;
   totalCurrentMatches = 0;
-  shuffleCards();
+  shuffleCards(CARD_TYPE);
 }
 
 const displayTopScore = () => {
@@ -82,6 +123,11 @@ const displayTopScore = () => {
 startBtn.addEventListener('click', function(e) {
   startBtn.remove();
   const scores = document.querySelector('#scores');
+
+   // resize h1
+   const h1 = document.querySelector('h1');
+   h1.style.fontSize = '5rem';
+
   displayTopScore();
   scores.classList.toggle('hidden'); // display scores
   gameContainer.classList.toggle('hidden'); // display cards
@@ -110,26 +156,45 @@ function shuffle(array) {
   return array;
 }
 
-let shuffledColors = shuffle(COLORS);
+let shuffledCardFronts = shuffle(CARD_FRONTS);
 
-const revealCard = (card) => {
-  card.style.backgroundColor = card.className;
+const revealCard = (card, cardType) => {
+  if (cardType === 'color')
+    card.style.backgroundColor = card.classList[FRONT_SIDE];
+  else if (cardType === 'gradient') {
+    const gradientId = card.classList[FRONT_SIDE];
+    const gradient = CARD_FRONTS.find(gradient => {
+      return gradient.id === gradientId; 
+    });
+    
+    const startColor = gradient['startColor'];
+    const endColor = gradient['endColor'];
+    card.style.background = `linear-gradient(45deg, ${startColor} 35%, ${endColor} 100%)`;
+  }
 }
 
 const hideCard = (card) => {
-  card.style.backgroundColor = 'white';
+  //card.style.backgroundColor = 'white';
+  card.style.background = 'radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%)';
 }
 
 // this function loops over the array of colors
 // it creates a new div and gives it a class with the value of the color
 // it also adds an event listener for a click for each card
-function createDivsForColors(colorArray) {
-  for (let color of colorArray) {
+function createDivsForCardFronts(cardFrontArray, cardType) {
+  for (let cardFront of cardFrontArray) {
     // create a new div
     const newDiv = document.createElement("div");
 
     // give it a class attribute for the value we are looping over
-    newDiv.classList.add(color);
+    // if the card type is color, add the color as the class 
+    if (cardType === 'color') {
+      newDiv.classList.add(cardFront);
+    }
+    // if the card type is gradient, add the gradient id as the class
+    else if (cardType === 'gradient') {
+      newDiv.classList.add(cardFront.id);
+    }
 
     // display cards face down
     hideCard(newDiv);
@@ -161,7 +226,7 @@ function handleCardClick(event) {
   }
   
   // valid guess, reveal card
-  revealCard(card);
+  revealCard(card, CARD_TYPE);
 
   // update guess count & display
   ++score;
@@ -170,11 +235,12 @@ function handleCardClick(event) {
   // if card is first guess, store it
   if (!firstGuessedCard) { 
     firstGuessedCard = card;
+
     return; // first card, so don't need to compare
   }
   
   // if cards don't match, flip over after 1s
-  if (card.className !== firstGuessedCard.className) {
+  if (card.classList[FRONT_SIDE] !== firstGuessedCard.classList[FRONT_SIDE]) {
     needToWait = true; // wait until mismatched cards flip over, before clicking others
     setTimeout(function() {
       // flip over mismatched cards
@@ -218,6 +284,7 @@ const createdFinishedGameDiv = () => {
   finishedGameDiv.setAttribute('id', 'finished')
   finishedGameDiv.innerText = `You matched all cards! Your score: ${score}`;
   const btnDiv = document.createElement('div');
+  btnDiv.setAttribute('id', 'new-game-btn');
   btnDiv.append(createNewGameBtn());
   finishedGameDiv.append(btnDiv);
   document.querySelector('body').append(finishedGameDiv);
@@ -237,16 +304,22 @@ const createNewGameBtn = () => {
   return newGameBtn;
 }
 
-const shuffleCards = () => {
-  shuffledColors = shuffle(getColorArray(numMatchingCardPairs));
+const shuffleCards = (cardType) => {
+  if (cardType === 'color')
+    shuffledCardFronts = shuffle(getColorArray(numMatchingCardPairs));
+  else if (cardType === 'gradient')
+  shuffledCardFronts = shuffle(getGradientArray(numMatchingCardPairs));
   const cards = gameContainer.children;
   for (let i = 0; i < cards.length; ++i) {
     hideCard(cards[i]);
     cards[i].dataset.matched = 0; 
     cards[i].classList.remove(cards[i].className);
-    cards[i].classList.add(shuffledColors[i]);
+    if (cardType === 'color')
+      cards[i].classList.add(shuffledCardFronts[i]);
+    else if (cardType === 'gradient')
+      cards[i].classList.add(shuffledCardFronts[i].id);
   }
 }
 
 // when the DOM loads
-createDivsForColors(shuffledColors);
+createDivsForCardFronts(shuffledCardFronts, CARD_TYPE);
