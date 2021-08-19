@@ -59,6 +59,7 @@ const getGradientArray = (numberOfPairs) => {
   for (let i = 0; i < numberOfPairs; ++i) {
     let gradient = {};
     gradient['startColor'] = getRandHexColor();
+    gradient['midColor'] = getRandHexColor();
     gradient['endColor'] = getRandHexColor();
     gradient['id'] = i.toString();
 
@@ -169,8 +170,10 @@ const revealCard = (card, cardType) => {
     });
     
     const startColor = gradient['startColor'];
+    const midColor = gradient['midColor'];
     const endColor = gradient['endColor'];
-    card.style.background = `linear-gradient(45deg, ${startColor} 35%, ${endColor} 100%)`;
+    card.style.background = 
+      `linear-gradient(45deg, ${startColor} 25%, ${midColor} 50%, ${endColor} 75%)`;
   }
 }
 
